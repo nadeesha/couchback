@@ -1,0 +1,5 @@
+{
+	"remoteCouch": "https://gordon:kVVBxQPE8eM3Hb@gordon.cloudant.com",
+	"appName": "gordon",
+	"usersDatabase": "users"
+}
