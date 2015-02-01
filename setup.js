@@ -3,20 +3,44 @@
 var Db = require('./lib/db');
 var config = require('./config');
 
-module.exports = function(cb) {
-    var db = new Db(config.remoteCouch);
+module.exports = function (cb) {
+    var cookie, db;
 
-    var usersDbName = config.appName + '-' + config.usersDatabase;
+    db = new Db('https://' + config.couchHost);
 
-    db.exists(usersDbName, function(err, hasDb) {
+    console.log('authenticating admin...');
+
+    db.authenticate(config.username, config.password, function (err, cookies) {
         if (err) {
             return cb(err);
+        } else {
+            console.log('admin authenticated successfully...')
         }
 
-        if (hasDb) {
-            cb();
-        } else {
-            db.create(usersDbName, cb);
-        }
+        cookie = cookies[0];
+        checkUsersDb();
     });
+
+    function checkUsersDb() {
+        var usersDbName = config.appName + '-' + config.usersDatabase;
+
+        db.exists(usersDbName, function(err, hasDb) {
+            if (err) {
+                return finalizeSetup(err);
+            }
+
+            if (!hasDb) {
+                console.log('users db is not there...');
+                db.create(usersDbName, finalizeSetup);
+            } else {
+                console.log('users db is already there...');
+                finalizeSetup();
+            }
+        });
+    }
+
+    function finalizeSetup(err) {
+        console.log('finalizing setup...');
+        cb(err, cookie);
+    }
 };
