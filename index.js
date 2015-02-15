@@ -1,65 +1,24 @@
 'use strict';
 
-var setup = require('./setup');
-var http = require('http');
 var config = require('./config');
-var colors = require('colors/safe');
+var Db = require('./lib/db');
+var Proxy = require('./lib/proxy');
 
-setup(function(err, authCookie) {
+var db = new Db(config.remoteCouch);
+db.authenticate(config.username, config.password, startProxy);
+
+function startProxy(err, cookies) {
     if (err) {
-        console.log(err);
-        return;
-    } else {
-        console.log('setup successful...');
+        return console.log(err);
     }
 
-    startProxy(authCookie);
-});
+    var authCookie = cookies[0];
 
-function startProxy(authCookie) {
-    var server = http.createServer();
+    console.log('admin authenticated successfully...');
 
-    server.on('request', function(serverReq,
-        serverResp) {
+    var port = process.env.PORT || 5050;
+    var proxy = new Proxy(config.couchHost, authCookie);
 
-        var host = config.couchHost,
-            opts, clientReq, handle;
-
-        handle = setTimeout(function() {
-            serverResp.writeHead(500, {});
-            serverResp.end('dammit');
-        }, 5000);
-
-        serverReq.headers.host = host;
-        serverReq.headers.Cookie = authCookie;
-
-        opts = {
-            host: host,
-            path: serverReq.url,
-            headers: serverReq.headers
-        };
-
-        clientReq = http.request(opts);
-
-        clientReq.on('response', function(clientResp) {
-
-            serverResp.writeHead(clientResp.statusCode, clientResp.headers);
-
-            clientResp.on('data', function(data) {
-                serverResp.write(data);
-            });
-
-            clientResp.on('end', function() {
-                clearTimeout(handle);
-                serverResp.end();
-            });
-
-        });
-
-        console.log(colors.green(serverReq.method) + ' ' + serverReq.url);
-
-        clientReq.end();
-    });
-
-    server.listen(5050);
+    console.log('proxy starting on port %s...', port);
+    proxy.start(port);
 }

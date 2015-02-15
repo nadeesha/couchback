@@ -14,7 +14,7 @@ module.exports = function (cb) {
         if (err) {
             return cb(err);
         } else {
-            console.log('admin authenticated successfully...')
+            console.log('admin authenticated successfully...');
         }
 
         cookie = cookies[0];
