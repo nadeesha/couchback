@@ -3,22 +3,72 @@
 var config = require('./config');
 var Db = require('./lib/db');
 var Proxy = require('./lib/proxy');
+var express = require('express');
+var couchops = require('./couchops');
+var uuid = require('uuid');
+var _ = require('lodash');
 
-var db = new Db(config.remoteCouch);
-db.authenticate(config.username, config.password, startProxy);
+var nano = require('nano')(config.remoteCouch);
+var usersdb = null;
 
-function startProxy(err, cookies) {
+nano.auth(config.username, config.password, function(err, body, headers) {
     if (err) {
-        return console.log(err);
+        console.log(err);
+        return;
     }
 
-    var authCookie = cookies[0];
+    if (headers && headers['set-cookie']) {
+        console.log('authenticated successfully');
+        createUsersDatabase(headers['set-cookie']);
+    } else {
+        console.log('something went wrong');
+    }
+});
 
-    console.log('admin authenticated successfully...');
+function createUsersDatabase(authCookie) {
+    console.log('checking the user database');
 
-    var port = process.env.PORT || 5050;
-    var proxy = new Proxy(config.couchHost, authCookie);
+    nano.db.get(config.usersDatabase, function(err, body) {
+        if (err) {
+            console.log(err);
+            return;
+        }
 
-    console.log('proxy starting on port %s...', port);
-    proxy.start(port);
+        console.log(body);
+    });
+
+    // usersdb = require('nano')({
+    //     url: config.remoteCouch + '/' + config.usersdb,
+    //     cookie: 'AuthSession=' + authCookie
+    // });
+
+    // usersdb.get()
 }
+
+// function registerEndpoints(app) {
+
+//     app.get('/', function(req, res) {
+//         return res.sendStatus(200);
+//     });
+
+//     app.put('/users', function(req, res, next) {
+//         if (!req.body.username || !req.body.password) {
+//             return res.status(400).send('username and password are required');
+//         }
+
+//         db.exists(req.body.username, function(err, exists) {
+//             if (err) {
+//                 return next(err)
+//             }
+
+//             if (exists) {
+//                 return res.status(409).send('username already exists');
+//             } else {
+//                 var dbname =
+//             }
+//         })
+//     });
+
+//     app.listen(process.env.PORT || 5050);
+
+// }

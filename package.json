@@ -11,8 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "colors": "^1.0.3",
+    "express": "^4.11.2",
     "http-proxy": "^1.8.1",
-    "lodash": "^3.0.1",
-    "request": "^2.51.0"
+    "lodash": "^3.3.0",
+    "nano": "^6.0.2",
+    "request": "^2.51.0",
+    "uuid": "^2.0.1"
   }
 }
