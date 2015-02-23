@@ -10,12 +10,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^0.8.1",
+    "body-parser": "^1.12.0",
     "colors": "^1.0.3",
+    "couchdb-api": "^1.2.2",
     "express": "^4.11.2",
     "http-proxy": "^1.8.1",
     "lodash": "^3.3.0",
     "nano": "^6.0.2",
+    "password-hash": "^1.2.2",
     "request": "^2.51.0",
+    "supertest": "^0.15.0",
     "uuid": "^2.0.1"
   }
 }
