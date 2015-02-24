@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/test.js",
     "start": "nodemon index.js"
   },
   "author": "",
@@ -17,6 +17,7 @@
     "express": "^4.11.2",
     "http-proxy": "^1.8.1",
     "lodash": "^3.3.0",
+    "morgan": "^1.5.1",
     "nano": "^6.0.2",
     "password-hash": "^1.2.2",
     "request": "^2.51.0",

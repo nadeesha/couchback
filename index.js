@@ -6,6 +6,7 @@ var uuid = require('uuid');
 var _ = require('lodash');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
+var logger = require('morgan');
 
 var couchAdmin = require('couchdb-api').srv(config.remoteCouch);
 var nano = require('nano')(config.remoteCouch);
@@ -66,8 +67,9 @@ function startServer() {
 
     var app = express();
     app.use(bodyParser.json());
+    app.use(logger('tiny'));
 
-    function validateCredentials(req, res, next) {
+    function hasCredentials(req, res, next) {
         if (!req.body.username || !req.body.password) {
             return res.status(400).send('username and password are required');
         } else {
@@ -79,11 +81,10 @@ function startServer() {
         return res.sendStatus(200);
     });
 
-    app.post('/users', validateCredentials, function(req, res, next) {
+    app.post('/users', hasCredentials, function(req, res, next) {
         usersDb.get(req.body.username, validateUserCreation);
 
         function validateUserCreation(err, exists) {
-            console.log('--> validateUserCreation');
             if (err && err.headers && err.headers.statusCode !== 404) {
                 return next(err);
             }
@@ -97,8 +98,6 @@ function startServer() {
         }
 
         function createUserDb(cb) {
-            console.log('--> createUserDb');
-
             // ..the database name must begin with a letter
             var dbname = 'd' + uuid.v4();
 
@@ -108,8 +107,6 @@ function startServer() {
         }
 
         function createUser(err, dbname) {
-            console.log('--> createUser');
-
             if (err) {
                 return next(err);
             }
@@ -122,7 +119,7 @@ function startServer() {
                     dbname: dbname
                 };
 
-                createUserInServer(userObj, function () {
+                createUserInServer(userObj, function() {
                     console.log('user created in server');
 
                     createUserInUsersDb(userObj);
@@ -131,15 +128,13 @@ function startServer() {
         }
 
         function createUserInServer(userObj, cb) {
-            console.log('--> createUserInServer');
-
             couchAdmin.register(req.body.username, req.body.password,
                 function(err) {
                     if (err) {
                         return next(err);
                     }
 
-                    assignUserToDb(userObj.dbname, function (err) {
+                    assignUserToDb(userObj.dbname, function(err) {
                         if (err) {
                             return next(err);
                         }
@@ -153,9 +148,7 @@ function startServer() {
         }
 
         function assignUserToDb(dbname, cb) {
-            console.log('--> assignUserToDb');
-
-            couchAdmin.srv().db(dbname).security({
+            couchAdmin.db(dbname).security({
                 couchdb_auth_only: true, // cloudant specific i think
                 members: {
                     names: [req.body.username]
@@ -164,8 +157,6 @@ function startServer() {
         }
 
         function createUserInUsersDb(userObj) {
-            console.log('--> createUserInUsersDb');
-
             usersDb.insert(userObj, req.body.username, function(err) {
                 if (err) {
                     return next(err);
@@ -177,9 +168,29 @@ function startServer() {
         }
     });
 
-    // app.post('/auth', validateCredentials, function (req, res, next) {
+    app.post('/auth', hasCredentials, function(req, res, next) {
+        usersDb.get(req.body.username, validateCredentials);
 
-    // });
+        function validateCredentials(err, user) {
+            if (err) {
+                return next(err);
+            }
+
+            bcrypt.compare(req.body.password, user.password,
+                function handleAuth(err, passed) {
+                    if (err) {
+                        return next(err);
+                    }
+
+                    if (passed) {
+                        return res.status(200).send(
+                            _.pick(user, ['username', 'createdOn', 'dbname']));
+                    } else {
+                        return res.status(401).end();
+                    }
+                });
+        }
+    });
 
     app.listen(process.env.PORT || 5050);
 }
