@@ -15,7 +15,7 @@ request.get('/').expect(200).end(report);
 var user = {
     username: uuid.v4(),
     password: uuid.v4()
-}
+};
 
 request.post('/users').send(user).expect(function(res) {
     if (res.statusCode !== 201) {
@@ -31,6 +31,10 @@ request.post('/users').send(user).expect(function(res) {
 function testLogin() {
     var fakeUser = _.clone(user);
     fakeUser.password = 'foobarbaz';
-    request.post('/auth').send(user).expect(200).end(report);
+    request.post('/auth').send(user).expect(200).expect(function (res) {
+        if(!res.body.dburl) {
+            return 'no db url present in login';
+        }
+    }).end(report);
     request.post('/auth').send(fakeUser).expect(401).end(report);
 }
