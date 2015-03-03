@@ -1,8 +1,7 @@
 {
-	"remoteCouch": "https://gordon.cloudant.com",
-	"couchHost": "gordon.cloudant.com",
-	"username": "gordon",
-	"password": "kVVBxQPE8eM3Hb",
-	"appName": "gordon",
-	"usersDatabase": "gordon-users"
+	"remoteCouch": "https://mydatabse.cloudant.com",
+	"username": "username",
+	"password": "password",
+	"appName": "myappname",
+	"usersDatabase": "myappname-users"
 }
