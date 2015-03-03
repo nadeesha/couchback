@@ -1,42 +1,32 @@
-(function(Couchback) {
+(function(Couchback, document) {
     'use strict';
 
-    Couchback.signUp = function(username, password, cb) {
-        ajax('/users', {
-            username: username,
-            password: password
-        }, cb);
-    };
-
-    Couchback.signIn = function(username, password, cb) {
-        ajax('/auth', {
-            username: username,
-            password: password
-        }, cb);
-    };
+    var scripts = document.getElementsByTagName('script');
+    var src = scripts[scripts.length - 1].src;
 
     function ajax(url, postBody, callbackFunction) {
-		var stateChange = function() {
-            if (this.request.readyState == 4)
-                callbackFunction(this.request.responseText);
-        };
-
-		var getRequest = function() {
+        var getRequest = function() {
             if (window.XMLHttpRequest) {
                 return new XMLHttpRequest();
             }
             return false;
         };
 
+        var request = getRequest();
+
+        var stateChange = function() {
+            if (request.readyState === 4) {
+                callbackFunction(request);
+            }
+        };
+
         if (callbackFunction) {
-            postBody = postBody;
+            postBody = JSON.stringify(postBody);
             callbackFunction = callbackFunction;
         } else {
             callbackFunction = postBody;
             postBody = null;
         }
-
-		var request = getRequest();
 
         if (request) {
             var req = request;
@@ -45,8 +35,7 @@
             if (postBody) {
                 req.open('POST', url, true);
                 req.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                req.setRequestHeader('Content-type', 'application/json');
-                req.setRequestHeader('Connection', 'close');
+                req.setRequestHeader('Content-Type', 'application/json');
             } else {
                 req.open('GET', url, true);
             }
@@ -54,4 +43,42 @@
             req.send(postBody);
         }
     }
-})(window.Couchback = window.Couchback || {});
+
+    function addCredentialsToUrl (url, username, password) {
+        var split = url.split('://');
+        return [].concat(split[0], '://', username, ':', password, '@', split[1]).join('');
+    }
+
+    Couchback.host = src.match(new RegExp('https?://[^/]*'))[0];
+
+    Couchback.signUp = function(username, password, cb) {
+        ajax(Couchback.host + '/users', {
+            username: username,
+            password: password
+        }, function(response) {
+            if (response.status >= 400) {
+                cb(response.responseText);
+            } else {
+                response.responseText = JSON.parse(response.responseText);
+                cb(null, response.responseText);
+            }
+        });
+    };
+
+    Couchback.signIn = function(username, password, cb) {
+        ajax(Couchback.host + '/auth', {
+            username: username,
+            password: password
+        }, function(response) {
+            if (response.status >= 400) {
+                cb(response.responseText);
+            } else {
+                var res = JSON.parse(response.responseText);
+                res.authUrl = addCredentialsToUrl(res.dburl, username, password);
+
+                cb(null, res);
+            }
+        });
+    };
+
+})(window.Couchback = window.Couchback || {}, window.document);

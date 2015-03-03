@@ -142,14 +142,22 @@ function sayOk(req, res) {
 }
 
 exports.start = function(backend, port) {
-	dbadmin = backend.admin;
-	dbserver = backend.server;
-	userMetadata = dbserver.use(config.usersDatabase);
+    dbadmin = backend.admin;
+    dbserver = backend.server;
+    userMetadata = dbserver.use(config.usersDatabase);
 
     var app = express();
     app.use(bodyParser.json());
     app.use(logger('tiny'));
     app.locals.backend = backend;
+    app.use(express.static(__dirname + '/public'));
+
+    app.use(function allowCors(req, res, next) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        next();
+    });
 
     app.get('/', sayOk);
     app.post('/users', hasCredentials, createUser);
