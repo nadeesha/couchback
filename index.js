@@ -1,9 +1,17 @@
 'use strict';
 
-var backend = require('./backend');
+var Backend = require('./backend');
 var server = require('./server');
+var config = require('./config');
 
-backend.initialize(function (err, backendConfigs) {
+var backend = new Backend({
+    remoteCouch: config.remoteCouch,
+    username: config.username,
+    password: config.password,
+    usersDatabase: config.usersDatabase
+});
+
+backend.initialize(function(err, backendConfigs) {
     if (err) {
         throw new Error(err);
     }
