@@ -1,18 +1,14 @@
 'use strict';
 
-var uuid = require('uuid').v4();
+var uuid = require('uuid');
 var bcrypt = require('bcrypt');
 var _ = require('lodash');
 var config = require('../config');
 
-var UserController = function(backend) {
-    this.backend = backend;
-};
+var controller = {};
 
-UserController.prototype.create = function(req, res, next) {
-    var self = this;
-
-    self.backend.getUser(req.body.username, function(err, user) {
+controller.create = function(req, res, next) {
+    req.backend.getUser(req.body.username, function(err, user) {
         if (err) {
             return next(err);
         } else if (user) {
@@ -28,7 +24,7 @@ UserController.prototype.create = function(req, res, next) {
         // ..the database name must begin with a letter
         var dbname = 'd' + uuid.v4();
 
-        self.backend.createDatabase(dbname, function(err) {
+        req.backend.createDatabase(dbname, function(err) {
             if (err) {
                 return next(err);
             } else {
@@ -47,7 +43,7 @@ UserController.prototype.create = function(req, res, next) {
     }
 
     function createUser(user) {
-        self.backend.createUser(user, function(err) {
+        req.backend.createUser(user, function(err) {
             if (err) {
                 return next(err);
             }
@@ -58,10 +54,8 @@ UserController.prototype.create = function(req, res, next) {
     }
 };
 
-UserController.prototype.authenticate = function authenticateUser(req, res, next) {
-    var self = this;
-
-    self.backend.getUser(req.body.username, function(err, user) {
+controller.authenticate = function authenticateUser(req, res, next) {
+    req.backend.getUser(req.body.username, function(err, user) {
         if (err) {
             return next(err);
         }
@@ -85,3 +79,5 @@ UserController.prototype.authenticate = function authenticateUser(req, res, next
         });
     });
 };
+
+module.exports = controller;

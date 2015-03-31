@@ -5,11 +5,9 @@ var bodyParser = require('body-parser');
 var logger = require('morgan');
 
 var middleware = require('./middleware/validation');
-var UserController = require('./controllers/user');
+var userController = require('./controllers/user');
 
 exports.start = function(backend, port) {
-    var userController = new UserController(backend);
-
     var app = express();
     app.use(bodyParser.json());
     app.use(logger('tiny'));
@@ -19,6 +17,11 @@ exports.start = function(backend, port) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        next();
+    });
+
+    app.use(function insertBackend (req, res, next) {
+        req.backend = backend;
         next();
     });
 

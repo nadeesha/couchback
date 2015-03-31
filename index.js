@@ -11,10 +11,10 @@ var backend = new Backend({
     usersDatabase: config.usersDatabase
 });
 
-backend.initialize(function(err, backendConfigs) {
+backend.initialize(function(err) {
     if (err) {
         throw new Error(err);
     }
 
-    server.start(backendConfigs, process.env.PORT || 5050);
+    server.start(backend, process.env.PORT || 5050);
 });

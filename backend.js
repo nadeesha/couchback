@@ -7,6 +7,7 @@ var Backend = function(opts) {
     this._password = opts.password;
     this._usersDatabase = opts.usersDatabase;
     this._userMetadata = null;
+    this._remoteCouch = opts.remoteCouch;
 };
 
 var authenticate = function(cb) {
@@ -78,12 +79,12 @@ Backend.prototype.createUser = function(user, cb) {
             return cb(err);
         }
 
-        assignUserToDb(user.dbname, user.username, function(err) {
+        assignUserToDb.call(self, user.dbname, user.username, function(err) {
             if (err) {
                 cb(err);
             }
 
-            createUserMetadata(user, cb);
+            createUserMetadata.call(self, user, cb);
         });
     });
 };
@@ -120,7 +121,7 @@ Backend.prototype.initialize = function(cb) {
 
         self._userMetadata = self._nano.use(self._usersDatabase);
 
-        createUserDbIfNotExists(cb);
+        createUserDbIfNotExists.call(self, cb);
     }
 
     authenticate.call(self, handleAuthentication);
