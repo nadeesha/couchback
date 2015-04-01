@@ -1,5 +1,6 @@
 'use strict';
 
+var logger = require('../lib/logger');
 var uuid = require('uuid');
 var bcrypt = require('bcrypt');
 var _ = require('lodash');
@@ -8,6 +9,8 @@ var config = require('../config');
 var controller = {};
 
 controller.create = function(req, res, next) {
+    logger.debug('Querying for user %s', req.body.username);
+
     req.backend.getUser(req.body.username, function(err, user) {
         if (err) {
             return next(err);
@@ -24,11 +27,19 @@ controller.create = function(req, res, next) {
         // ..the database name must begin with a letter
         var dbname = 'd' + uuid.v4();
 
+        logger.debug('Creating new user database %s', dbname);
+
         req.backend.createDatabase(dbname, function(err) {
             if (err) {
                 return next(err);
             } else {
+                logger.debug('User database created %s', dbname);
+
                 bcrypt.hash(req.body.password, 8, function(err, hashedPass) {
+                    if (err) {
+                        return next(err);
+                    }
+
                     var user = {
                         username: req.body.username,
                         password: hashedPass,
@@ -44,13 +55,15 @@ controller.create = function(req, res, next) {
     }
 
     function createUser(user) {
+        logger.debug('Creating user account for %s', user.username);
+
         req.backend.createUser(user, function(err) {
             if (err) {
                 return next(err);
+            } else {
+                return res.status(201).send(
+                    _.pick(user, ['username', 'createdOn', 'dbname']));
             }
-
-            return res.status(201).send(
-                _.pick(user, ['username', 'createdOn', 'dbname']));
         });
     }
 };

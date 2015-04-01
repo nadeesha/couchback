@@ -2,7 +2,9 @@
 
 var express = require('express');
 var bodyParser = require('body-parser');
-var logger = require('morgan');
+var httpLogger = require('morgan');
+var logger = require('./lib/logger');
+var uuid = require('uuid');
 
 var middleware = require('./middleware/validation');
 var userController = require('./controllers/user');
@@ -10,7 +12,10 @@ var userController = require('./controllers/user');
 exports.start = function(backend, port) {
     var app = express();
     app.use(bodyParser.json());
-    app.use(logger('tiny'));
+
+    // TODO: change to winston middleware
+    app.use(httpLogger('tiny'));
+
     app.use(express.static(__dirname + '/public'));
 
     app.use(function allowCors(req, res, next) {
@@ -20,14 +25,14 @@ exports.start = function(backend, port) {
         next();
     });
 
-    app.use(function insertBackend (req, res, next) {
+    app.use(function insertBackend(req, res, next) {
         req.backend = backend;
         next();
     });
 
     // begin routes
 
-    app.get('/', function (req, res) {
+    app.get('/', function(req, res) {
         res.sendStatus(200);
     });
 
@@ -43,7 +48,19 @@ exports.start = function(backend, port) {
 
     // end routes
 
-    console.log('server started on port', port);
+    app.use(function(err, req, res, next) {
+        var errorCode = uuid.v4();
+
+        logger.error('Unhandler error %s', errorCode);
+        logger.error(err);
+
+        res.status(500).send({
+            message: 'Undefined server error',
+            code: errorCode
+        });
+    });
+
+    logger.info('Server started on port %s.', port);
 
     app.listen(port);
 };

@@ -1,6 +1,8 @@
 'use strict';
 
-var Backend = require('./backend');
+var Backend = require('./lib/backend');
+var logger = require('./lib/logger');
+
 var server = require('./server');
 var config = require('./config');
 
@@ -11,10 +13,14 @@ var backend = new Backend({
     usersDatabase: config.usersDatabase
 });
 
+logger.info('Initializing the backend at %s.', config.remoteCouch);
+
 backend.initialize(function(err) {
     if (err) {
         throw new Error(err);
     }
+
+    logger.info('Backend initialized. Starting Server.');
 
     server.start(backend, process.env.PORT || 5050);
 });
