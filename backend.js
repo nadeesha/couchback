@@ -10,12 +10,11 @@ var Backend = function(opts) {
     this._remoteCouch = opts.remoteCouch;
 };
 
-var authenticate = function(cb) {
+Backend.prototype._authenticate = function(cb) {
     var self = this;
 
     self._nano.auth(self._username, self._password, function(err, body, headers) {
         if (err) {
-            console.log(err);
             return;
         }
 
@@ -36,7 +35,7 @@ var authenticate = function(cb) {
     });
 };
 
-var createUserDbIfNotExists = function(cb) {
+Backend.prototype._createUserDbIfNotExists = function(cb) {
     var self = this;
 
     self._nano.db.get(self._usersDatabase, function(err, exists) {
@@ -54,7 +53,7 @@ var createUserDbIfNotExists = function(cb) {
     });
 };
 
-var assignUserToDb = function(dbname, username, cb) {
+Backend.prototype._assignUserToDb = function(dbname, username, cb) {
     var self = this;
 
     self._couchAdmin.db(dbname).security({
@@ -65,7 +64,7 @@ var assignUserToDb = function(dbname, username, cb) {
     }, cb);
 };
 
-var createUserMetadata = function(user, cb) {
+Backend.prototype._createUserMetadata = function(user, cb) {
     var self = this;
 
     self._userMetadata.insert(user, user.username, cb);
@@ -74,17 +73,17 @@ var createUserMetadata = function(user, cb) {
 Backend.prototype.createUser = function(user, cb) {
     var self = this;
 
-    self._couchAdmin.register(user.username, user.password, function(err) {
+    self._couchAdmin.register(user.dbusername, user.password, function(err) {
         if (err) {
             return cb(err);
         }
 
-        assignUserToDb.call(self, user.dbname, user.username, function(err) {
+        self._assignUserToDb(user.dbusername, user.username, function(err) {
             if (err) {
                 cb(err);
             }
 
-            createUserMetadata.call(self, user, cb);
+            self._createUserMetadata(user, cb);
         });
     });
 };
@@ -101,6 +100,7 @@ Backend.prototype.getUser = function(username, cb) {
     var self = this;
 
     self._userMetadata.get(username, function(err, user) {
+        console.log(err, user);
         if (err && err.headers && err.headers.statusCode !== 404) {
             return cb(err);
         } else if (user) {
@@ -114,6 +114,7 @@ Backend.prototype.getUser = function(username, cb) {
 Backend.prototype.initialize = function(cb) {
     var self = this;
 
+
     function handleAuthentication(err) {
         if (err) {
             return cb(err);
@@ -121,10 +122,10 @@ Backend.prototype.initialize = function(cb) {
 
         self._userMetadata = self._nano.use(self._usersDatabase);
 
-        createUserDbIfNotExists.call(self, cb);
+        self._createUserDbIfNotExists(cb);
     }
 
-    authenticate.call(self, handleAuthentication);
+    self._authenticate(handleAuthentication);
 };
 
 module.exports = Backend;

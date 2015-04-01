@@ -33,7 +33,8 @@ controller.create = function(req, res, next) {
                         username: req.body.username,
                         password: hashedPass,
                         createdOn: Date.now(),
-                        dbname: dbname
+                        dbname: dbname,
+                        dbusername: 'u' + uuid.v4()
                     };
 
                     createUser(user);
@@ -60,13 +61,19 @@ controller.authenticate = function authenticateUser(req, res, next) {
             return next(err);
         }
 
-        bcrypt.compare(req.body.password, user.password, function (err, passed) {
+        if (!user) {
+            return res.sendStatus(401);
+        }
+
+        bcrypt.compare(req.body.password, user.password, function(err, passed) {
             if (err) {
                 return next(err);
             }
 
             if (passed) {
-                var authResult = _.pick(user, ['username', 'createdOn', 'dbname']);
+                var authResult = _.pick(user, [
+                    'username', 'createdOn', 'dbname', 'dbusername'
+                ]);
 
                 _.extend(authResult, {
                     dburl: config.remoteCouch + '/' + user.dbname
