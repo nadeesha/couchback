@@ -74,7 +74,7 @@
                 cb(response.responseText);
             } else {
                 var res = JSON.parse(response.responseText);
-                res.authUrl = addCredentialsToUrl(res.dburl, username, password);
+                res.authUrl = addCredentialsToUrl(res.dburl, res.dbusername, password);
 
                 cb(null, res);
             }
