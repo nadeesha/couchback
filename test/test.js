@@ -26,15 +26,15 @@ request.post('/users').send(user).expect(function(res) {
         return 'user creation did not return dbname: ' +
             JSON.stringify(res.body.dbname);
     }
-}).end(testLogin);
-
-function testLogin() {
+}).end(function testLogin() {
     var fakeUser = _.clone(user);
     fakeUser.password = 'foobarbaz';
-    request.post('/auth').send(user).expect(200).expect(function (res) {
-        if(!res.body.dburl) {
+
+    request.post('/auth').send(user).expect(200).expect(function(res) {
+        if (!res.body.dburl) {
             return 'no db url present in login';
         }
     }).end(report);
+
     request.post('/auth').send(fakeUser).expect(401).end(report);
-}
+});

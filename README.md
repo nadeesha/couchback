@@ -44,12 +44,14 @@ Including the `couchback.js` gives you the global `Couchback` namespace.
 ## Create a user
 
 ```js
-Couchback.signUp(username, password, function(err, response) {
+Couchback.signUp(username, password, [meta], function(err, response) {
     if (!err) {
         console.log('successfully created user');
     }
 });
 ```
+
+The optional meta argument can store any custom metadata you need to, about the user. It's retrieved when you sign in the user, as property `meta` in the login response.
 
 ## User sign in and PouchDB sync
 
