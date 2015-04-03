@@ -51,10 +51,16 @@
 
     Couchback.host = src.match(new RegExp('https?://[^/]*'))[0];
 
-    Couchback.signUp = function(username, password, cb) {
+    Couchback.signUp = function(username, password, meta, cb) {
+        if (!cb && typeof meta === 'function') {
+            cb = meta;
+            meta = null;
+        }
+
         ajax(Couchback.host + '/users', {
             username: username,
-            password: password
+            password: password,
+            meta: meta
         }, function(response) {
             if (response.status >= 400) {
                 cb(response.responseText);

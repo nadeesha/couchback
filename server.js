@@ -60,7 +60,7 @@ exports.start = function(backend, port) {
     app.use(expressWinston.errorLogger({
         transports: [
             new winston.transports.Console({
-                json: true,
+                json: false,
                 colorize: true
             })
         ]

@@ -35,21 +35,17 @@ controller.create = function(req, res, next) {
             } else {
                 logger.debug('User database created %s', dbname);
 
-                bcrypt.hash(req.body.password, 8, function(err, hashedPass) {
-                    if (err) {
-                        return next(err);
-                    }
+                var user = {
+                    username: req.body.username,
+                    salt: bcrypt.genSaltSync(10),
+                    password: req.body.password,
+                    createdOn: Date.now(),
+                    dbname: dbname,
+                    dbusername: 'u' + uuid.v4(),
+                    meta: req.body.meta
+                };
 
-                    var user = {
-                        username: req.body.username,
-                        password: hashedPass,
-                        createdOn: Date.now(),
-                        dbname: dbname,
-                        dbusername: 'u' + uuid.v4()
-                    };
-
-                    createUser(user);
-                });
+                createUser(user);
             }
         });
     }
@@ -69,7 +65,10 @@ controller.create = function(req, res, next) {
 };
 
 controller.authenticate = function authenticateUser(req, res, next) {
-    req.backend.getUser(req.body.username, function(err, user) {
+    var username = req.body.username;
+    var pass = req.body.password;
+
+    req.backend.getUser(username, function(err, user) {
         if (err) {
             return next(err);
         }
@@ -78,14 +77,14 @@ controller.authenticate = function authenticateUser(req, res, next) {
             return res.sendStatus(401);
         }
 
-        bcrypt.compare(req.body.password, user.password, function(err, passed) {
+        req.backend.authenticateUser(username, pass, function (err, passed) {
             if (err) {
                 return next(err);
             }
 
             if (passed) {
                 var authResult = _.pick(user, [
-                    'username', 'createdOn', 'dbname', 'dbusername'
+                    'username', 'createdOn', 'dbname', 'dbusername', 'meta'
                 ]);
 
                 _.extend(authResult, {
