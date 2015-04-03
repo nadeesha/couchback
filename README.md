@@ -23,9 +23,9 @@ When you create a user,
 
 When you try to authenticate the user,
 
-1. User credentials are checked against the present values in the metadata table. (Username and salted hash)
+1. User credentials are checked against the couchdb user. (Username and salted hash)
 2. If successful, a database url is returned.
-3. This url can be supplied to PouchDB sync, to sync your front end PouchDB with backend CouchDB.
+3. This url can be supplied to PouchDB for syncing your front-end PouchDB with backend CouchDB.
 
 # Installation
 
@@ -44,7 +44,7 @@ Including the `couchback.js` gives you the global `Couchback` namespace.
 ## Create a user
 
 ```js
-Couchback.signUp(username, password, [meta], function(err, response) {
+Couchback.signUp(username, password [, meta], function(err, response) {
     if (!err) {
         console.log('successfully created user');
     }
