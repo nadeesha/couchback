@@ -1,0 +1,7 @@
+{
+	"remoteCouch": "https://myapp.cloudant.com",
+	"username": "johndoe",
+	"password": "MjM4NmZkNGZ",
+	"appName": "myapp",
+	"usersDatabase": "myapp-users"
+}
